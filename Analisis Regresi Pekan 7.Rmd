@@ -1,0 +1,125 @@
+---
+title: "Analisis Regresi"
+author: "Azanti Zuhriyani"
+date: "2024-03-06"
+output: html_document
+---
+
+#Install Package
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(lmtest)
+```
+
+#Import Data
+
+```{r}
+df <- read_excel("D:/Dunia Stat/Semester 4/Anreg/Data_Anreg_W7.xlsx")
+head(df)
+```
+
+## Scatter Plot
+
+```{r}
+ggplot(df, aes_string(x = "X", y = "Y")) +
+  geom_point()
+```
+
+Scatter Plot diatas menunjukkan bahwa scatter plot tersebut tidak linier
+
+# Membentuk Model Regresi
+
+```{r}
+model_1 = lm(Y~X, data = df)
+summary(model_1)
+```
+
+## Uji Autokorelasi
+
+### Durbin-Watson
+
+Uji Durbin-Watson untuk mendeteksi adanya Autokorelasi pada residu regresi, dengan hipotesis sebagai berikut : H0 -\> Tidak terdapat autokorelasi H1 -\> Terdapat autokorelasi Alpha -\> 0.05
+
+```{r}
+uji_dw <- dwtest(model_1)
+```
+
+```{r}
+ifelse(uji_dw$p < 0.05, "Ada Autokorelasi", "Tidak Ada Autokorelasi")
+```
+
+Berdasarkan Uji Durbin-Watson test diatas dapat disimpulkan bahwa terdapat Autokorelasi yang berarti sisaan tidak saling bebas.
+
+Nilai p-value \< 0.05 tolak H0, maka pada taraf nyata 95% terdapat autokorelasi, sehingga pada asumsi ini tidak terpenuhi.
+
+## Uji Homokedastisitas
+
+```{r}
+bptest(model_1, studentize = TRUE, data = df)
+```
+
+Berdasarkan uji Breush-Pagan didapatkan nilai p-value sebesar 0.4674 \> 0.05 sehingga gagal tolak H0. Oleh karena itu, tidak cukup bukti untuk menolak hipotesis nol (H0). Ini menunjukkan bahwa tidak terdapat cukup bukti untuk menyatakan bahwa varian residual dalam model tidak konstan atau untuk menyimpulkan adanya heterokedastisitas. Dengan demikian, asumsi homokedastisitas terpenuhi.
+
+# Penanganan Autokorelasi
+
+## Transformasi Data
+
+Terdapat satu asumsi yang tidak terpenuhi (autokorelasi) sehingga diperlukan transformasi data agar asumsi tersebut terpenuhi.
+
+#### pada X
+
+```{r}
+xtrans <- sqrt(df$X)
+xtrans
+```
+
+#### pada Y
+
+```{r}
+ytrans <- sqrt(df$Y)
+ytrans
+```
+
+```{r}
+model_2 = lm(ytrans~xtrans, data = df)
+summary(model_2)
+```
+
+## Uji Autokorelasi Hasil Transformasi
+
+### DUrbin-Watson
+
+Uji Durbin-Watson untuk mendeteksi adanya Autokorelasi pada residu regresi, dengan hipotesis sebagai berikut : H0 -\> Tidak terdapat autokorelasi H1 -\> Terdapat autokorelasi Alpha -\> 0.05
+
+```{r}
+dwtest(model_2)
+```
+
+Hasil uji autokorelasi setelah data tersebut di transformasi mendapatkan hasil p-value = 0.8629, dan nilai p-value lebih besar dari alpha (0.8629 \> 0.05) hal tersebut menandakan tidak tolak H0. Maka pada taraf nyata 95% tidak terdapat autokorelasi, sehingga pada asumsi ini terpenuhi.
+
+## Regresi Linier Sederhana setelah Transformasi
+
+### Scater Plot
+
+```{r}
+ggplot(df, aes_string(x = "xtrans", y = "ytrans")) +
+  geom_point()
+```
+
+Scatter Plot diatas menunjukkan bahwa scatter plot tersebut sudah linier, berbeda dengan yang sebelumnya.
+
+```{r}
+summary(model_2)
+```
+
+## Kesimpulan
+
+Berdasarkan hasil analisis regresi linear sederhana dengan transformasi yang telah dilakukan, didapatkan nilai adjusted R-squared sebesar 0.9755 atau dengan kata lain sekitar 97.55% variabilitas yang terdapat pada variabel dependen (y) dapat dijelaskan oleh variabel independen (x).
+
+Korelasi yang dihitung dari akar kuadrat dari nilai determinasi adalah sebesar 0.988 (mendekati nilai 1) yang menunjukkan adanya korelasi yang sangat kuat antara kedua variabel.
+
+Maka model terbaik tersebut
+
+***Y duga = 8.71245 - 0.81339X1***
